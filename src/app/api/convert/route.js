@@ -56,3 +56,82 @@ function isForbiddenConversion(from, to) {
   if (imageTypes.includes(from) && videoTypes.includes(to)) return true;
   return false;
 }
+
+export async function POST(req) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('file');
+    const targetFormat = formData.get('targetFormat');
+
+    if (!file || !targetFormat) {
+      return NextResponse.json({ error: "Missing file or target format" }, { status: 400 });
+    }
+
+    const fileName = file.name.toLowerCase();
+    const originalExt = fileName.split('.').pop();
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    let convertedBuffer = buffer;
+    let outFileName = `${fileName.split('.')[0]}_converted.${targetFormat}`;
+    let mimeType = getMimeType(targetFormat);
+
+    // Restrict forbidden conversions
+    if (isForbiddenConversion(originalExt, targetFormat)) {
+      return NextResponse.json({ error: "This conversion is not allowed." }, { status: 400 });
+    }
+
+    // Image to PDF conversion
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    if (imageTypes.includes(originalExt) && targetFormat === 'pdf') {
+      const pdfDoc = await PDFDocument.create();
+      
+      // Embed the image based on its type
+      let image;
+      if (originalExt === 'png') {
+        image = await pdfDoc.embedPng(bytes);
+      } else if (originalExt === 'jpg' || originalExt === 'jpeg') {
+        image = await pdfDoc.embedJpg(bytes);
+      } else {
+        // For other image types, try to embed as PNG (may need conversion first)
+        return NextResponse.json({ error: "Unsupported image format for PDF conversion" }, { status: 400 });
+      }
+      
+      // Add a page that matches the image dimensions
+      const page = pdfDoc.addPage([image.width, image.height]);
+      
+      // Draw the image on the page
+      page.drawImage(image, {
+        x: 0,
+        y: 0,
+        width: image.width,
+        height: image.height,
+      });
+      
+      convertedBuffer = await pdfDoc.save();
+      mimeType = getMimeType('pdf');
+      outFileName = `${fileName.split('.')[0]}_converted.pdf`;
+    }
+    // Text to PDF conversion (existing)
+    else if (originalExt === 'txt' && targetFormat === 'pdf') {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
+      const text = buffer.toString();
+      page.drawText(text, { x: 50, y: 750, size: 12 });
+      convertedBuffer = await pdfDoc.save();
+      mimeType = getMimeType('pdf');
+      outFileName = `${fileName.split('.')[0]}_converted.pdf`;
+    }
+    // Add more conversion logic here as needed
+
+    return new Response(convertedBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": mimeType,
+        "Content-Disposition": `attachment; filename="${outFileName}"`,
+      },
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error.message || "Conversion failed" }, { status: 500 });
+  }
+}
