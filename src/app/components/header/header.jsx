@@ -6,10 +6,10 @@ import Image from 'next/image';
 
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const pathname = usePathname();
 
-  // Define paths where header should be hidden
   const noHeaderPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
 
   useEffect(() => {
@@ -29,13 +29,12 @@ export default function Header() {
     window.location.href = '/login';
   };
 
-  // Don’t render the header on excluded paths
   if (noHeaderPaths.includes(pathname)) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-[#121212] border-b border-neutral-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo + Title */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo.png"
@@ -47,8 +46,27 @@ export default function Header() {
           <h1 className="text-xl font-semibold text-white tracking-wide">VaultX</h1>
         </Link>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-6">
+        {/* Hamburger Menu - Mobile Only */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="text-gray-300 lg:hidden focus:outline-none"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            {mobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-6">
           <Link
             href="/"
             className={`text-neutral-300 hover:text-white transition ${
@@ -113,10 +131,7 @@ export default function Header() {
             </div>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="text-neutral-300 hover:text-white transition"
-              >
+              <Link href="/login" className="text-neutral-300 hover:text-white transition">
                 Login
               </Link>
               <Link
@@ -129,6 +144,75 @@ export default function Header() {
           )}
         </nav>
       </div>
+
+      {/* Mobile Navigation */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden px-4 pb-4 bg-[#121212] border-t border-neutral-800 space-y-3 pt-3">
+          <Link
+            href="/"
+            className={`block text-neutral-300 hover:text-white transition ${
+              pathname === "/" ? "text-white font-medium" : ""
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
+            href="/about"
+            className={`block text-neutral-300 hover:text-white transition ${
+              pathname === "/about" ? "text-white font-medium" : ""
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            About
+          </Link>
+
+          {user ? (
+            <>
+              <Link
+                href="/profile"
+                className="block text-white hover:text-gray-300 transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                My Profile
+              </Link>
+              <Link
+                href="/change-password"
+                className="block text-white hover:text-gray-300 transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Change Password
+              </Link>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="block w-full text-left text-red-400 hover:text-red-300 transition"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="block text-neutral-300 hover:text-white transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="block px-4 py-2 mt-1 border border-white text-white rounded-md hover:bg-white hover:text-black transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </header>
   );
 }

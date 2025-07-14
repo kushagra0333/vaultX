@@ -156,18 +156,22 @@ export default function Hero() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111] text-white">
-  <main className="container mx-auto px-4 py-12">
-    <div className="max-w-4xl mx-auto bg-[#1a1a1a] p-8 rounded-xl shadow-lg border border-neutral-800">
+   <div className="min-h-screen bg-[#111] text-white">
+  <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="bg-[#1a1a1a] p-6 sm:p-8 rounded-xl shadow-lg border border-neutral-800">
+      
+      {/* Heading */}
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold">Universal File Converter</h1>
-        <p className="text-gray-400 mt-2">Convert between hundreds of file formats with ease.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Universal File Converter</h1>
+        <p className="text-gray-400 mt-2 text-sm sm:text-base">
+          Convert between hundreds of file formats with ease.
+        </p>
       </div>
 
       {/* Upload Section */}
-      <div className="mb-6 bg-[#222] p-5 rounded-lg border border-neutral-700">
+      <div className="mb-6 bg-[#222] p-4 sm:p-5 rounded-lg border border-neutral-700">
         <label className="block text-sm font-medium mb-3">Upload File</label>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <label className="flex-1 cursor-pointer">
             <input
               type="file"
@@ -175,9 +179,9 @@ export default function Hero() {
               className="hidden"
               ref={fileInputRef}
             />
-            <div className="w-full px-4 py-3 border-2 border-dashed border-gray-500 rounded-lg hover:bg-[#2a2a2a] transition text-gray-300 text-center">
+            <div className="w-full px-4 py-3 border-2 border-dashed border-gray-500 rounded-lg hover:bg-[#2a2a2a] transition text-gray-300 text-center truncate">
               {file ? (
-                <span className="truncate">{file.name}</span>
+                <span>{file.name}</span>
               ) : (
                 <span>Click to browse or drag and drop</span>
               )}
@@ -194,14 +198,14 @@ export default function Hero() {
                 setOutputType("");
                 if (fileInputRef.current) fileInputRef.current.value = '';
               }}
-              className="px-4 py-3 bg-red-800 text-red-100 rounded-lg hover:bg-red-700 transition"
+              className="px-4 py-2 bg-red-800 text-red-100 rounded-lg hover:bg-red-700 transition text-sm"
             >
               Clear
             </button>
           )}
         </div>
         {file && (
-          <div className="mt-3 flex justify-between text-sm text-gray-400">
+          <div className="mt-3 flex flex-col sm:flex-row justify-between text-sm text-gray-400">
             <span>Type: .{inputType}</span>
             <span>Size: {formatFileSize(file.size)}</span>
           </div>
@@ -212,7 +216,7 @@ export default function Hero() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
         <div className="bg-[#222] p-4 rounded-lg border border-neutral-700">
           <label className="block text-sm font-medium mb-2">Source Format</label>
-          <div className="px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-md text-gray-300">
+          <div className="px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-md text-gray-300 text-sm">
             {file ? `.${inputType}` : '--'}
           </div>
         </div>
@@ -223,7 +227,7 @@ export default function Hero() {
             value={outputType}
             onChange={(e) => setOutputType(e.target.value)}
             disabled={!file}
-            className="w-full px-3 py-2 bg-[#1a1a1a] text-white border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-[#1a1a1a] text-white border border-gray-600 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
           >
             {fileTypes[inputType]?.conversions?.map((format) => (
               <option key={format} value={format}>
@@ -234,7 +238,7 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Progress Indicator */}
+      {/* Progress Bar */}
       {status === "converting" && (
         <div className="mb-6 bg-[#1a1a1a] border border-blue-700 p-4 rounded-lg">
           <div className="flex justify-between text-sm text-blue-400 mb-2">
@@ -250,11 +254,11 @@ export default function Hero() {
         </div>
       )}
 
-      {/* Error and Status Messages */}
+      {/* Error */}
       {error && (
-        <div className="mb-6 bg-red-900 border border-red-700 p-4 rounded-lg">
+        <div className="mb-6 bg-red-900 border border-red-700 p-4 rounded-lg text-sm">
           <div className="text-red-300 flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             {error}
@@ -262,8 +266,9 @@ export default function Hero() {
         </div>
       )}
 
+      {/* Success */}
       {status === "done" && (
-        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg">
+        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg text-sm">
           Conversion complete! Your file has been downloaded.
         </div>
       )}
@@ -272,7 +277,7 @@ export default function Hero() {
       <button
         onClick={handleConvert}
         disabled={!file || status === "converting" || !outputType}
-        className={`w-full py-3 px-4 rounded-lg font-medium transition ${
+        className={`w-full py-3 px-4 rounded-lg font-medium transition text-sm sm:text-base ${
           !file || status === "converting" || !outputType
             ? "bg-gray-700 text-gray-400 cursor-not-allowed"
             : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow"
