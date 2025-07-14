@@ -1,20 +1,31 @@
 import clientPromise from '@/lib/mongodb';
-import { generateOTP } from '@/utils/auth'; // <-- Correct path!
+import { generateOTP } from '@/utils/auth';
 import { sendEmail } from '@/utils/email';
 
 export async function POST(req) {
   try {
     const { email } = await req.json();
+
+    if (!email) {
+      return new Response(
+        JSON.stringify({ error: 'Email is required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db();
 
     // Check if email already exists
     const existingUser = await db.collection('users').findOne({ email });
     if (existingUser) {
-      return new Response(JSON.stringify({ error: 'Email already exists' }), { status: 400 });
+      return new Response(
+        JSON.stringify({ error: 'Email already registered' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Generate and store OTP
+    // Generate OTP
     const otp = generateOTP();
     await db.collection('verifications').updateOne(
       { email },
@@ -22,15 +33,27 @@ export async function POST(req) {
       { upsert: true }
     );
 
-    // Send email
-    await sendEmail({
+    // Send OTP via email
+    const emailSent = await sendEmail({
       to: email,
       subject: 'Your VaultX Verification Code',
-      text: `Your verification code is: ${otp}`
+      text: `Your OTP is: ${otp}`,
+      html: `<p>Your VaultX verification code is: <strong>${otp}</strong></p>`
     });
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    if (!emailSent) {
+      throw new Error('Failed to send OTP email');
+    }
+
+    return new Response(
+      JSON.stringify({ success: true }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    console.error('OTP Request Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }

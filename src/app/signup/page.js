@@ -15,18 +15,25 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // Step 1: Request OTP
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setError("");
+    
     if (!email || !username || !password || !confirmPassword) {
       setError("All fields are required");
       return;
     }
+    
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/request-otp", {
@@ -34,8 +41,13 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send OTP");
+      }
+      
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -44,19 +56,24 @@ export default function SignupPage() {
     }
   };
 
-  // Step 2: Verify OTP and create account
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username, password, otp }),
       });
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Signup failed");
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Signup failed");
+      }
+      
       localStorage.setItem("vault_token", data.token);
       router.push("/vault");
     } catch (err) {
@@ -149,18 +166,23 @@ export default function SignupPage() {
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <p className="text-sm text-neutral-400">
+                We've sent a 6-digit OTP to {email}. Please check your inbox.
+              </p>
               <div>
                 <label htmlFor="otp" className="block text-sm font-medium mb-1">
-                  Enter OTP sent to your email
+                  Enter OTP
                 </label>
                 <input
                   id="otp"
                   type="text"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   className="w-full px-4 py-2 bg-[#252525] border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
                   maxLength={6}
+                  pattern="\d{6}"
+                  inputMode="numeric"
                 />
               </div>
               <button
@@ -173,6 +195,13 @@ export default function SignupPage() {
                 }`}
               >
                 {isLoading ? "Verifying..." : "Verify & Sign up"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full py-2 px-4 text-neutral-400 hover:text-white text-sm"
+              >
+                Back to previous step
               </button>
             </form>
           )}

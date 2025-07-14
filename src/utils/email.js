@@ -1,28 +1,27 @@
-// lib/email.js
-export async function sendEmail({ to, subject, text }) {
-  // In development, just log the email
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`Email to: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${text}`);
-    return true;
-  }
+import sgMail from '@sendgrid/mail';
 
-  // In production, implement your actual email service (SendGrid, Mailgun, etc.)
-  // Example for SendGrid:
-  /*
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  
+// Ensure SendGrid API key is set
+if (!process.env.SENDGRID_API_KEY) {
+  throw new Error('SendGrid API key is missing. Check your environment variables.');
+}
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+export async function sendEmail({ to, subject, text, html }) {
   const msg = {
     to,
-    from: 'noreply@vaultx.com',
+    from: process.env.SENDGRID_FROM_EMAIL || 'no-reply@vaultx.com', // Must be verified in SendGrid
     subject,
-    text
+    text: text || 'Your VaultX verification OTP',
+    html: html || `<p>${text || 'Your VaultX verification OTP'}</p>`,
   };
-  
-  return sgMail.send(msg);
-  */
-  
-  return true;
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Email sent to ${to}`);
+    return true;
+  } catch (error) {
+    console.error('SendGrid Error:', error.response?.body || error.message);
+    throw new Error('Failed to send email. Please try again.');
+  }
 }
