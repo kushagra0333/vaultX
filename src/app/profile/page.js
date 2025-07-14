@@ -1,9 +1,9 @@
-// app/profile/page.jsx
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/app/components/header/header';
 import Link from 'next/link';
+
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState('');

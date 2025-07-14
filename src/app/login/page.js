@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/app/components/header/header";
 import Link from "next/link";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -94,7 +95,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-4 text-center text-sm text-neutral-400">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-purple-400 hover:underline">
               Sign up
             </Link>

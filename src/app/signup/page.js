@@ -18,22 +18,14 @@ export default function SignupPage() {
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setError("");
-    
     if (!email || !username || !password || !confirmPassword) {
       setError("All fields are required");
       return;
     }
-    
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/request-otp", {
@@ -41,13 +33,8 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      
       const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to send OTP");
-      }
-      
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -60,20 +47,14 @@ export default function SignupPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username, password, otp }),
       });
-      
       const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Signup failed");
-      }
-      
+      if (!res.ok) throw new Error(data.error || "Signup failed");
       localStorage.setItem("vault_token", data.token);
       router.push("/vault");
     } catch (err) {
@@ -167,7 +148,7 @@ export default function SignupPage() {
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <p className="text-sm text-neutral-400">
-                We've sent a 6-digit OTP to {email}. Please check your inbox.
+                We&apos;ve sent a 6-digit OTP to {email}. Please check your inbox.
               </p>
               <div>
                 <label htmlFor="otp" className="block text-sm font-medium mb-1">
