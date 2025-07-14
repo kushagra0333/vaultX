@@ -156,156 +156,152 @@ export default function Hero() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#121212] text-white">
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto bg-[#1e1e1e] p-6 rounded-xl border border-neutral-800 shadow-lg">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-2">File Converter</h2>
-            <p className="text-neutral-400">Convert files between almost any format</p>
-          </div>
+    <div className="min-h-screen bg-[#111] text-white">
+  <main className="container mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto bg-[#1a1a1a] p-8 rounded-xl shadow-lg border border-neutral-800">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold">Universal File Converter</h1>
+        <p className="text-gray-400 mt-2">Convert between hundreds of file formats with ease.</p>
+      </div>
 
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm text-neutral-300 mb-2 font-medium">
-                Upload File
-              </label>
-              <div className="flex items-center gap-3">
-                <label className="flex-1 cursor-pointer">
-                  <input 
-                    type="file" 
-                    onChange={handleFileChange} 
-                    className="hidden" 
-                    ref={fileInputRef}
-                  />
-                  <div className="w-full bg-[#252525] hover:bg-[#2a2a2a] text-white border border-neutral-700 p-3 rounded-lg transition-colors duration-200">
-                    {file ? file.name : "Choose a file"}
-                  </div>
-                </label>
-                {file && (
-                  <button
-                    onClick={() => {
-                      setFile(null);
-                      setError(null);
-                      setStatus("idle");
-                      setProgress(0);
-                      setInputType("");
-                      setOutputType("");
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = '';
-                      }
-                    }}
-                    className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              {file && (
-                <div className="mt-2 text-sm text-neutral-400">
-                  <p>Type: .{inputType} • Size: {formatFileSize(file.size)}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-sm text-neutral-300 mb-2 font-medium">
-                  Convert From
-                </label>
-                <select
-                  value={inputType}
-                  onChange={(e) => setInputType(e.target.value)}
-                  className="w-full bg-[#252525] text-white border border-neutral-700 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  disabled={!file}
-                >
-                  {file && (
-                    <option value={inputType}>.{inputType} (original)</option>
-                  )}
-                </select>
-              </div>
-              
-              <div className="flex-1">
-                <label className="block text-sm text-neutral-300 mb-2 font-medium">
-                  Convert To
-                </label>
-                <select
-                  value={outputType}
-                  onChange={(e) => setOutputType(e.target.value)}
-                  className="w-full bg-[#252525] text-white border border-neutral-700 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  disabled={!file}
-                >
-                  {getOutputOptions().map(type => (
-                    <option key={type} value={type}>.{type}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {status !== "idle" && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-neutral-400">
-                  <span>
-                    {status === "converting" ? "Converting..." : "Downloading..."}
-                  </span>
-                  <span>
-                    {progress}% complete
-                  </span>
-                </div>
-                <div className="w-full bg-neutral-800 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg">
-                {error}
-              </div>
-            )}
-            {status === "done" && (
-              <div className="p-3 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg">
-                Conversion complete! Your file has been downloaded.
-              </div>
-            )}
-
-            <button
-              onClick={handleConvert}
-              disabled={!file || status !== "idle" || !outputType}
-              className={`w-full ${
-                !file || status !== "idle" || !outputType
-                  ? "bg-neutral-700 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
-              } text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2`}
-            >
-              {status === "converting" ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4l5-5-5-5v4C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Converting...
-                </>
+      {/* Upload Section */}
+      <div className="mb-6 bg-[#222] p-5 rounded-lg border border-neutral-700">
+        <label className="block text-sm font-medium mb-3">Upload File</label>
+        <div className="flex gap-3 items-center">
+          <label className="flex-1 cursor-pointer">
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              ref={fileInputRef}
+            />
+            <div className="w-full px-4 py-3 border-2 border-dashed border-gray-500 rounded-lg hover:bg-[#2a2a2a] transition text-gray-300 text-center">
+              {file ? (
+                <span className="truncate">{file.name}</span>
               ) : (
-                "Convert File"
+                <span>Click to browse or drag and drop</span>
               )}
+            </div>
+          </label>
+          {file && (
+            <button
+              onClick={() => {
+                setFile(null);
+                setError(null);
+                setStatus("idle");
+                setProgress(0);
+                setInputType("");
+                setOutputType("");
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+              className="px-4 py-3 bg-red-800 text-red-100 rounded-lg hover:bg-red-700 transition"
+            >
+              Clear
             </button>
+          )}
+        </div>
+        {file && (
+          <div className="mt-3 flex justify-between text-sm text-gray-400">
+            <span>Type: .{inputType}</span>
+            <span>Size: {formatFileSize(file.size)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Format Selection */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+        <div className="bg-[#222] p-4 rounded-lg border border-neutral-700">
+          <label className="block text-sm font-medium mb-2">Source Format</label>
+          <div className="px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-md text-gray-300">
+            {file ? `.${inputType}` : '--'}
           </div>
         </div>
-      </main>
+
+        <div className="bg-[#222] p-4 rounded-lg border border-neutral-700">
+          <label className="block text-sm font-medium mb-2">Target Format</label>
+          <select
+            value={outputType}
+            onChange={(e) => setOutputType(e.target.value)}
+            disabled={!file}
+            className="w-full px-3 py-2 bg-[#1a1a1a] text-white border border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500"
+          >
+            {fileTypes[inputType]?.conversions?.map((format) => (
+              <option key={format} value={format}>
+                .{format}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Progress Indicator */}
+      {status === "converting" && (
+        <div className="mb-6 bg-[#1a1a1a] border border-blue-700 p-4 rounded-lg">
+          <div className="flex justify-between text-sm text-blue-400 mb-2">
+            <span>Conversion in progress...</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="w-full bg-neutral-800 rounded-full h-2.5">
+            <div
+              className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Error and Status Messages */}
+      {error && (
+        <div className="mb-6 bg-red-900 border border-red-700 p-4 rounded-lg">
+          <div className="text-red-300 flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        </div>
+      )}
+
+      {status === "done" && (
+        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg">
+          Conversion complete! Your file has been downloaded.
+        </div>
+      )}
+
+      {/* Convert Button */}
+      <button
+        onClick={handleConvert}
+        disabled={!file || status === "converting" || !outputType}
+        className={`w-full py-3 px-4 rounded-lg font-medium transition ${
+          !file || status === "converting" || !outputType
+            ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+            : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow"
+        } flex items-center justify-center gap-2`}
+      >
+        {status === "converting" ? (
+          <>
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            Converting...
+          </>
+        ) : (
+          "Convert File"
+        )}
+      </button>
     </div>
+  </main>
+</div>
+
   );
 }
