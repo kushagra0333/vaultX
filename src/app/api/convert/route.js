@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { PDFDocument } from "pdf-lib";
+import { promises as fs } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import libre from 'libreoffice-convert';
+import { execSync } from 'child_process';
+
+// Promisify LibreOffice convert
+libre.convertAsync = require('util').promisify(libre.convert);
 
 function getMimeType(ext) {
   const types = {
     pdf: 'application/pdf',
+    doc: 'application/msword',
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     odt: 'application/vnd.oasis.opendocument.text',
     rtf: 'application/rtf',
@@ -43,13 +52,12 @@ function getMimeType(ext) {
     js: 'application/javascript',
     json: 'application/json',
     xml: 'application/xml',
-    // Add more as needed
+    rar: 'application/vnd.rar',
   };
   return types[ext] || 'application/octet-stream';
 }
 
 function isForbiddenConversion(from, to) {
-  // Prevent video to image, image to video, etc.
   const videoTypes = ['mp4', 'mov', 'avi', 'webm', 'mkv'];
   const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
   if (videoTypes.includes(from) && imageTypes.includes(to)) return true;
@@ -76,31 +84,51 @@ export async function POST(req) {
     let outFileName = `${fileName.split('.')[0]}_converted.${targetFormat}`;
     let mimeType = getMimeType(targetFormat);
 
-    // Restrict forbidden conversions
     if (isForbiddenConversion(originalExt, targetFormat)) {
       return NextResponse.json({ error: "This conversion is not allowed." }, { status: 400 });
     }
 
+    // Office to PDF conversion (DOCX, DOC, ODT, etc.)
+    const officeExtensions = ['doc', 'docx', 'odt', 'rtf'];
+    if (officeExtensions.includes(originalExt) && targetFormat === 'pdf') {
+      const tempDir = tmpdir();
+      const inputPath = join(tempDir, `input.${originalExt}`);
+      const outputPath = join(tempDir, 'output.pdf');
+
+      await fs.writeFile(inputPath, buffer);
+
+      try {
+        // Method 1: Try LibreOffice CLI first (most reliable)
+        const command = `libreoffice --headless --convert-to pdf ${inputPath} --outdir ${tempDir}`;
+        execSync(command, { stdio: 'ignore' });
+        
+        // Fallback to programmatic conversion if needed
+        if (!await fs.access(outputPath).then(() => true).catch(() => false)) {
+          console.log('Falling back to programmatic conversion');
+          convertedBuffer = await libre.convertAsync(buffer, '.pdf', undefined);
+        } else {
+          convertedBuffer = await fs.readFile(outputPath);
+        }
+      } catch (error) {
+        console.error('Office conversion error:', error);
+        throw new Error('Failed to convert document to PDF');
+      } finally {
+        await fs.unlink(inputPath).catch(() => {});
+        await fs.unlink(outputPath).catch(() => {});
+      }
+    }
     // Image to PDF conversion
-    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-    if (imageTypes.includes(originalExt) && targetFormat === 'pdf') {
+    else if (['jpg', 'jpeg', 'png'].includes(originalExt) && targetFormat === 'pdf') {
       const pdfDoc = await PDFDocument.create();
-      
-      // Embed the image based on its type
       let image;
+      
       if (originalExt === 'png') {
         image = await pdfDoc.embedPng(bytes);
       } else if (originalExt === 'jpg' || originalExt === 'jpeg') {
         image = await pdfDoc.embedJpg(bytes);
-      } else {
-        // For other image types, try to embed as PNG (may need conversion first)
-        return NextResponse.json({ error: "Unsupported image format for PDF conversion" }, { status: 400 });
       }
       
-      // Add a page that matches the image dimensions
       const page = pdfDoc.addPage([image.width, image.height]);
-      
-      // Draw the image on the page
       page.drawImage(image, {
         x: 0,
         y: 0,
@@ -109,20 +137,15 @@ export async function POST(req) {
       });
       
       convertedBuffer = await pdfDoc.save();
-      mimeType = getMimeType('pdf');
-      outFileName = `${fileName.split('.')[0]}_converted.pdf`;
     }
-    // Text to PDF conversion (existing)
+    // Text to PDF conversion
     else if (originalExt === 'txt' && targetFormat === 'pdf') {
       const pdfDoc = await PDFDocument.create();
       const page = pdfDoc.addPage([600, 800]);
       const text = buffer.toString();
       page.drawText(text, { x: 50, y: 750, size: 12 });
       convertedBuffer = await pdfDoc.save();
-      mimeType = getMimeType('pdf');
-      outFileName = `${fileName.split('.')[0]}_converted.pdf`;
     }
-    // Add more conversion logic here as needed
 
     return new Response(convertedBuffer, {
       status: 200,
@@ -132,6 +155,10 @@ export async function POST(req) {
       },
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Conversion failed" }, { status: 500 });
+    console.error('Conversion error:', error);
+    return NextResponse.json(
+      { error: error.message || "Conversion failed. Please ensure LibreOffice is installed for document conversions." },
+      { status: 500 }
+    );
   }
 }
